@@ -30,15 +30,8 @@ export function generateData(
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   };
 
-  const noise = x.map(() => {
-    if (isTest) {
-      // "random real values between -1 and +1 * s"
-      return (Math.random() * 2 - 1) * noiseLevel;
-    } else {
-      // "random real values based on the normal distribution * s"
-      return randomNormal() * noiseLevel;
-    }
-  });
+  // Both train and test use Gaussian noise N(0, s²) to satisfy the i.i.d. assumption
+  const noise = x.map(() => randomNormal() * noiseLevel);
 
   const y_noise = y_t.map((val, i) => val + noise[i]);
 
