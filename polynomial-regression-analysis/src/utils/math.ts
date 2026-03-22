@@ -1,4 +1,4 @@
-import { Matrix, solve } from 'ml-matrix';
+import { Matrix, SVD, QrDecomposition } from 'ml-matrix';
 
 export function generateData(
   xMin: number,
@@ -21,7 +21,7 @@ export function generateData(
   }
 
   const y_t = x.map((val) => val * val);
-  
+
   // Box-Muller transform for normal distribution
   const randomNormal = () => {
     let u = 0, v = 0;
@@ -49,18 +49,29 @@ export function mean(arr: number[]) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
+// Sample standard deviation (n-1 denominator, Bessel's correction)
 export function stdDev(arr: number[], m?: number) {
+  if (arr.length <= 1) return 0;
   const avg = m !== undefined ? m : mean(arr);
-  const squareDiffs = arr.map((val) => Math.pow(val - avg, 2));
-  return Math.sqrt(mean(squareDiffs));
+  const sumSquareDiffs = arr.reduce((acc, val) => acc + (val - avg) ** 2, 0);
+  return Math.sqrt(sumSquareDiffs / (arr.length - 1));
+}
+
+export function mse(yTrue: number[], yPred: number[]) {
+  return yTrue.reduce((acc, val, i) => acc + (val - yPred[i]) ** 2, 0) / yTrue.length;
 }
 
 export function rSquared(yTrue: number[], yPred: number[]) {
   const yMean = mean(yTrue);
-  const ssTot = yTrue.reduce((acc, val) => acc + Math.pow(val - yMean, 2), 0);
-  const ssRes = yTrue.reduce((acc, val, i) => acc + Math.pow(val - yPred[i], 2), 0);
+  const ssTot = yTrue.reduce((acc, val) => acc + (val - yMean) ** 2, 0);
+  const ssRes = yTrue.reduce((acc, val, i) => acc + (val - yPred[i]) ** 2, 0);
   if (ssTot === 0) return 1;
   return 1 - ssRes / ssTot;
+}
+
+export function adjustedR2(r2: number, n: number, p: number) {
+  if (n - p - 1 <= 0) return NaN;
+  return 1 - (1 - r2) * (n - 1) / (n - p - 1);
 }
 
 export function standardize(data: number[], m?: number, s?: number) {
@@ -74,6 +85,13 @@ export function standardize(data: number[], m?: number, s?: number) {
   };
 }
 
+// Normalize x to [-1, 1] for numerical stability
+export function normalizeToUnit(x: number[], xMin: number, xMax: number) {
+  const range = xMax - xMin;
+  if (range === 0) return x.map(() => 0);
+  return x.map(v => 2 * (v - xMin) / range - 1);
+}
+
 export function buildDesignMatrix(x: number[], order: number) {
   const X = new Matrix(x.length, order + 1);
   for (let i = 0; i < x.length; i++) {
@@ -84,32 +102,57 @@ export function buildDesignMatrix(x: number[], order: number) {
   return X;
 }
 
+// OLS via SVD with truncated singular values (numerically stable)
 export function solveOLS(X: Matrix, y: Matrix) {
-  const Xt = X.transpose();
-  const XtX = Xt.mmul(X);
-  const Xty = Xt.mmul(y);
-  return solve(XtX, Xty);
+  const svd = new SVD(X, { autoTranspose: true });
+  const S = svd.diagonal;
+  const threshold = 1e-10 * S[0];
+  const U = svd.leftSingularVectors;
+  const V = svd.rightSingularVectors;
+  const Uty = U.transpose().mmul(y);
+
+  const SinvUty = new Matrix(S.length, 1);
+  for (let i = 0; i < S.length; i++) {
+    SinvUty.set(i, 0, S[i] > threshold ? Uty.get(i, 0) / S[i] : 0);
+  }
+  return V.mmul(SinvUty);
 }
 
+// Ridge via augmented system + QR decomposition
 export function solveRidge(X: Matrix, y: Matrix, lambda: number) {
   if (lambda === 0) return solveOLS(X, y);
-  const Xt = X.transpose();
-  const XtX = Xt.mmul(X);
-  const I = Matrix.eye(XtX.rows, XtX.columns).mul(lambda);
-  // Do not penalize the intercept
-  I.set(0, 0, 0); 
-  const XtX_plus_lambdaI = XtX.add(I);
-  const Xty = Xt.mmul(y);
-  return solve(XtX_plus_lambdaI, Xty);
+  const n = X.rows;
+  const p = X.columns;
+  const sqrtLambda = Math.sqrt(lambda);
+
+  // Augmented system: [X; sqrt(λ)*D] β = [y; 0]
+  // where D is identity with D[0,0]=0 (don't penalize intercept)
+  const Xaug = Matrix.zeros(n + p, p);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < p; j++) {
+      Xaug.set(i, j, X.get(i, j));
+    }
+  }
+  for (let j = 1; j < p; j++) {
+    Xaug.set(n + j, j, sqrtLambda);
+  }
+
+  const yaug = Matrix.zeros(n + p, 1);
+  for (let i = 0; i < n; i++) {
+    yaug.set(i, 0, y.get(i, 0));
+  }
+
+  const qr = new QrDecomposition(Xaug);
+  return qr.solve(yaug);
 }
 
 export function solveLasso(X: Matrix, y: Matrix, lambda: number, iterations = 1000) {
   if (lambda === 0) return solveOLS(X, y);
-  
+
   const n = X.rows;
   const p = X.columns;
   let beta = new Float64Array(p);
-  
+
   // Precompute X columns and norms
   const xCols = [];
   const xNorms = [];
@@ -148,7 +191,7 @@ export function solveLasso(X: Matrix, y: Matrix, lambda: number, iterations = 10
           newBetaJ = 0;
         }
       }
-      
+
       maxDiff = Math.max(maxDiff, Math.abs(newBetaJ - beta[j]));
       beta[j] = newBetaJ;
     }
