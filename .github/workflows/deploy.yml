@@ -40,9 +40,9 @@ jobs:
 
       - name: Assemble site
         run: |
-          mkdir -p _site/polynomial-regression-analysis/dist
+          mkdir -p _site/polynomial-regression-analysis
           cp index.html _site/
-          cp polynomial-regression-analysis/dist/index.html _site/polynomial-regression-analysis/dist/
+          cp polynomial-regression-analysis/dist/index.html _site/polynomial-regression-analysis/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
