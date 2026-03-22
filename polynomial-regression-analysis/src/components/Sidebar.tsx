@@ -23,16 +23,18 @@ interface SidebarProps {
   lambdaL2: number;
   setLambdaL2: (val: number) => void;
   metrics: {
-    trainMean: number;
-    trainStd: number;
     trainR2: number;
-    testMean: number;
-    testStd: number;
     testR2: number;
+    trainAdjR2: number;
+    testAdjR2: number;
+    trainMSE: number;
+    testMSE: number;
     resMean: number;
     resStd: number;
   };
   polyEquation: string;
+  pGeqN: boolean;
+  nTrain: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -57,6 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setLambdaL2,
   metrics,
   polyEquation,
+  pGeqN,
+  nTrain,
 }) => {
   return (
     <div className="space-y-6">
@@ -70,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Data Parameter Box */}
       <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
         <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Data Parameter</h3>
-        
+
         <div className="space-y-4">
           <div>
             <h4 className="font-semibold text-sm text-slate-700 mb-2">Sample Size Selection</h4>
@@ -146,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Model Parameter Box */}
       <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
         <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Model Parameter</h3>
-        
+
         <div className="space-y-4">
           <div>
             <h4 className="font-semibold text-sm text-slate-700 mb-1">Polynomial Order (p)</h4>
@@ -161,6 +165,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full"
             />
             <div className="text-right text-sm font-medium">{polyOrder}</div>
+            {pGeqN && (
+              <div className="mt-2 p-2 bg-amber-50 border border-amber-300 rounded text-xs text-amber-800">
+                p + 1 = {polyOrder + 1} parameters {'>='} n = {nTrain} samples. The system is underdetermined (more parameters than data points). Results may be unreliable.
+              </div>
+            )}
           </div>
 
           <div>
@@ -171,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onChange={(e) => setStandardize(e.target.checked)}
                 className="mr-2 rounded text-indigo-600 focus:ring-indigo-500"
               />
-              Standardize Data
+              Standardize Features (X)
             </label>
           </div>
 
@@ -202,7 +211,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
                 <div className="text-right text-sm font-medium">{lambdaL1.toFixed(1)}</div>
                 <div className="mt-2 text-xs text-center overflow-hidden">
-                  <Latex>{'$$ L = \\sum (y - \\hat{y})^2 + \\lambda \\sum |\\beta_j| $$'}</Latex>
+                  <Latex>{'$$ L = \\sum (y_i - \\hat{y}_i)^2 + \\lambda \\sum_{j=1}^{p} |\\beta_j| $$'}</Latex>
                 </div>
               </div>
             )}
@@ -222,7 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
                 <div className="text-right text-sm font-medium">{lambdaL2}</div>
                 <div className="mt-2 text-xs text-center overflow-hidden">
-                  <Latex>{'$$ L = \\sum (y - \\hat{y})^2 + \\lambda \\sum \\beta_j^2 $$'}</Latex>
+                  <Latex>{'$$ L = \\sum (y_i - \\hat{y}_i)^2 + \\lambda \\sum_{j=1}^{p} \\beta_j^2 $$'}</Latex>
                 </div>
               </div>
             )}
@@ -233,8 +242,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Metrics Box */}
       <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
         <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Metrics</h3>
-        
-        <h4 className="font-semibold text-sm text-slate-700 mb-2">Training Data vs. Test Data</h4>
+
+        <h4 className="font-semibold text-sm text-slate-700 mb-2">Training vs. Test Performance</h4>
         <div className="overflow-hidden rounded-lg border border-slate-200 mb-4">
           <table className="min-w-full divide-y divide-slate-200 text-xs text-center">
             <thead className="bg-slate-50">
@@ -246,32 +255,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
               <tr>
-                <td className="px-2 py-2 font-medium text-slate-900">Mean</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.trainMean.toFixed(2)}</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.testMean.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td className="px-2 py-2 font-medium text-slate-900">Std Dev</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.trainStd.toFixed(2)}</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.testStd.toFixed(2)}</td>
+                <td className="px-2 py-2 font-medium text-slate-900">MSE</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.trainMSE.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.testMSE.toFixed(4)}</td>
               </tr>
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900">R²</td>
                 <td className="px-2 py-2 text-slate-600">{metrics.trainR2.toFixed(4)}</td>
                 <td className="px-2 py-2 text-slate-600">{metrics.testR2.toFixed(4)}</td>
               </tr>
+              <tr>
+                <td className="px-2 py-2 font-medium text-slate-900">Adj. R²</td>
+                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.trainAdjR2) ? 'N/A' : metrics.trainAdjR2.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.testAdjR2) ? 'N/A' : metrics.testAdjR2.toFixed(4)}</td>
+              </tr>
             </tbody>
           </table>
         </div>
 
-        <h4 className="font-semibold text-sm text-slate-700 mb-2">Residual Values</h4>
+        <h4 className="font-semibold text-sm text-slate-700 mb-2">Residual Statistics (Test Set)</h4>
         <div className="grid grid-cols-2 gap-2 text-center text-sm">
           <div className="bg-slate-50 p-2 rounded border border-slate-100">
-            <div className="text-xs text-slate-500 mb-1">Mean (res)</div>
+            <div className="text-xs text-slate-500 mb-1">Mean</div>
             <div className="font-medium">{metrics.resMean.toFixed(4)}</div>
           </div>
           <div className="bg-slate-50 p-2 rounded border border-slate-100">
-            <div className="text-xs text-slate-500 mb-1">Std Dev (res)</div>
+            <div className="text-xs text-slate-500 mb-1">Std Dev</div>
             <div className="font-medium">{metrics.resStd.toFixed(4)}</div>
           </div>
         </div>

@@ -7,7 +7,10 @@ import {
   mean,
   stdDev,
   rSquared,
+  adjustedR2,
+  mse,
   standardize,
+  normalizeToUnit,
   buildDesignMatrix,
   solveOLS,
   solveRidge,
@@ -49,29 +52,25 @@ export const App = () => {
     const xTestOriginal = [...testDataRaw.x];
     const yTestOriginal = [...testDataRaw.y_noise];
 
-    let xTrain = [...xTrainOriginal];
-    let yTrain = [...yTrainOriginal];
-    let xTest = [...xTestOriginal];
-    let yTest = [...yTestOriginal];
-
-    let xMean = 0, xStd = 1, yMean = 0, yStd = 1;
+    // Determine x values for the design matrix
+    let xForMatrix_train: number[];
+    let xForMatrix_test: number[];
 
     if (isStandardized) {
+      // Z-score normalize x (using training statistics)
       const xStats = standardize(xTrainOriginal);
-      xMean = xStats.mean;
-      xStd = xStats.stdDev;
-      xTrain = xStats.standardized;
-
-      const yStats = standardize(yTrainOriginal);
-      yMean = yStats.mean;
-      yStd = yStats.stdDev;
-      yTrain = yStats.standardized;
-
-      xTest = xTestOriginal.map(v => (v - xMean) / xStd);
-      yTest = yTestOriginal.map(v => (v - yMean) / yStd);
+      xForMatrix_train = xStats.standardized;
+      xForMatrix_test = xTestOriginal.map(v => (v - xStats.mean) / xStats.stdDev);
+    } else {
+      // Normalize x to [-1, 1] for numerical stability
+      xForMatrix_train = normalizeToUnit(xTrainOriginal, -5, 5);
+      xForMatrix_test = normalizeToUnit(xTestOriginal, -5, 5);
     }
 
-    const X_train_mat = buildDesignMatrix(xTrain, polyOrder);
+    // y is NEVER standardized (issue #11 fix)
+    const yTrain = [...yTrainOriginal];
+
+    const X_train_mat = buildDesignMatrix(xForMatrix_train, polyOrder);
     const y_train_mat = new Matrix(yTrain.map(v => [v]));
 
     let beta: Matrix;
@@ -84,36 +83,61 @@ export const App = () => {
     }
 
     const yTrainHat = predict(X_train_mat, beta);
-    
-    const X_test_mat = buildDesignMatrix(xTest, polyOrder);
+
+    const X_test_mat = buildDesignMatrix(xForMatrix_test, polyOrder);
     const yTestHat = predict(X_test_mat, beta);
 
-    // Inverse transform predictions to original scale for plotting and metrics
-    const yTrainHatOrig = isStandardized ? yTrainHat.map(v => v * yStd + yMean) : yTrainHat;
-    const yTestHatOrig = isStandardized ? yTestHat.map(v => v * yStd + yMean) : yTestHat;
+    // All metrics in original y scale (y was never standardized)
+    const n_train = yTrainOriginal.length;
+    const n_test = yTestOriginal.length;
+    const p = polyOrder;
 
-    const displayYTrain = isStandardized ? yTrain : yTrainOriginal;
-    const displayYTest = isStandardized ? yTest : yTestOriginal;
-    const displayYTrainHat = isStandardized ? yTrainHat : yTrainHatOrig;
-    const displayYTestHat = isStandardized ? yTestHat : yTestHatOrig;
+    const trainR2 = rSquared(yTrainOriginal, yTrainHat);
+    const testR2 = rSquared(yTestOriginal, yTestHat);
+    const trainAdjR2 = adjustedR2(trainR2, n_train, p);
+    const testAdjR2 = adjustedR2(testR2, n_test, p);
+    const trainMSE = mse(yTrainOriginal, yTrainHat);
+    const testMSE = mse(yTestOriginal, yTestHat);
 
-    const trainR2 = rSquared(displayYTrain, displayYTrainHat);
-    const testR2 = rSquared(displayYTest, displayYTestHat);
+    const residuals = yTestOriginal.map((y, i) => y - yTestHat[i]);
+    const resMean = mean(residuals);
+    const resStd = stdDev(residuals, resMean);
 
-    const residuals = yTestOriginal.map((y, i) => y - yTestHatOrig[i]);
-    const displayResiduals = displayYTest.map((y, i) => y - displayYTestHat[i]);
-    const resMean = mean(displayResiduals);
-    const resStd = stdDev(displayResiduals, resMean);
-
-    // Build equation string
-    let eq = `y = `;
-    for (let i = 0; i <= polyOrder; i++) {
-      const coef = beta.get(i, 0);
-      if (i === 0) {
-        eq += `${coef >= 0 ? '+' : ''}${coef.toFixed(4)}`;
-      } else {
-        eq += ` ${coef >= 0 ? '+' : '-'} ${Math.abs(coef).toFixed(4)}x^${i}`;
+    // Build equation string (descending order, original x scale)
+    let eq = 'y = ';
+    if (isStandardized) {
+      // Show equation in standardized x space
+      const terms: string[] = [];
+      for (let i = polyOrder; i >= 0; i--) {
+        const coef = beta.get(i, 0);
+        if (i === 0) {
+          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(4)}`);
+        } else {
+          const sign = coef >= 0 && terms.length > 0 ? '+ ' : (coef < 0 ? '- ' : '');
+          const absCoef = Math.abs(coef).toFixed(4);
+          const xTerm = i === 1 ? 'x\u0303' : `x\u0303^${i}`;
+          terms.push(`${sign}${absCoef}${xTerm}`);
+        }
       }
+      eq += terms.join(' ');
+      eq += '  (x\u0303 = standardized x)';
+    } else {
+      // Back-transform coefficients to original x scale
+      // x_norm = (x - (-5)) / (5 - (-5)) * 2 - 1 = x/5
+      // So x = 5 * x_norm, and β_orig_j = β_norm_j / 5^j
+      const terms: string[] = [];
+      for (let i = polyOrder; i >= 0; i--) {
+        const coef = beta.get(i, 0) / Math.pow(5, i);
+        if (i === 0) {
+          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(4)}`);
+        } else {
+          const sign = coef >= 0 && terms.length > 0 ? '+ ' : (coef < 0 ? '- ' : '');
+          const absCoef = Math.abs(coef).toFixed(4);
+          const xTerm = i === 1 ? 'x' : `x^${i}`;
+          terms.push(`${sign}${absCoef}${xTerm}`);
+        }
+      }
+      eq += terms.join(' ');
     }
 
     // Format data for charts (ALWAYS ORIGINAL SCALE)
@@ -121,14 +145,14 @@ export const App = () => {
       x,
       y_t: trainDataRaw.y_t[i],
       y_noise: yTrainOriginal[i],
-      y_hat: yTrainHatOrig[i]
+      y_hat: yTrainHat[i]
     }));
 
     const testChartData = xTestOriginal.map((x, i) => ({
       x,
       y_t: testDataRaw.y_t[i],
       y_noise: yTestOriginal[i],
-      y_hat: yTestHatOrig[i]
+      y_hat: yTestHat[i]
     }));
 
     const resChartData = xTestOriginal.map((x, i) => ({
@@ -136,32 +160,43 @@ export const App = () => {
       res: residuals[i]
     }));
 
+    // Scatter data with both noisy target AND true target
     const scatterChartData = yTestOriginal.map((y, i) => ({
       target: y,
-      pred: yTestHatOrig[i]
+      targetTrue: testDataRaw.y_t[i],
+      pred: yTestHat[i]
     }));
 
-    // Histogram bins
-    const bins = Array(11).fill(0);
-    const minBin = -15;
-    const binWidth = 3;
+    // Dynamic histogram bins (Sturges' rule for bin count)
+    const resMin = Math.min(...residuals);
+    const resMax = Math.max(...residuals);
+    const resRange = resMax - resMin;
+    const numBins = Math.max(5, Math.min(20, Math.ceil(1 + 3.322 * Math.log10(residuals.length))));
+    const binWidth = resRange > 0 ? resRange / numBins : 1;
+    const binStart = resMin - binWidth * 0.5;
+
+    const bins = Array(numBins).fill(0);
     residuals.forEach(r => {
-      const binIdx = Math.floor((r - minBin) / binWidth);
-      if (binIdx >= 0 && binIdx < 11) bins[binIdx]++;
+      const binIdx = Math.floor((r - binStart) / binWidth);
+      if (binIdx >= 0 && binIdx < numBins) bins[binIdx]++;
+      else if (binIdx >= numBins) bins[numBins - 1]++;
     });
     const histChartData = bins.map((count, i) => ({
-      bin: minBin + i * binWidth + binWidth / 2,
+      bin: parseFloat((binStart + i * binWidth + binWidth / 2).toFixed(2)),
       count
     }));
 
+    // Warning: p >= n
+    const pGeqN = polyOrder + 1 >= n_train;
+
     return {
       metrics: {
-        trainMean: mean(displayYTrain),
-        trainStd: stdDev(displayYTrain),
         trainR2,
-        testMean: mean(displayYTest),
-        testStd: stdDev(displayYTest),
         testR2,
+        trainAdjR2,
+        testAdjR2,
+        trainMSE,
+        testMSE,
         resMean,
         resStd
       },
@@ -170,7 +205,9 @@ export const App = () => {
       testChartData,
       resChartData,
       scatterChartData,
-      histChartData
+      histChartData,
+      pGeqN,
+      nTrain: n_train
     };
 
   }, [trainDataRaw, testDataRaw, polyOrder, isStandardized, regularization, lambdaL1, lambdaL2]);
@@ -185,7 +222,7 @@ export const App = () => {
             <ul className="list-disc pl-5 space-y-1 text-slate-600">
               <li>Understand the concepts of learning, underfitting, and overfitting in data-driven models.</li>
               <li>Analyze the impact of sample size, noise level, model complexity, and regularization on model generalization.</li>
-              <li>Evaluate model performance using metrics such as R² and residual analysis.</li>
+              <li>Evaluate model performance using metrics such as R², Adjusted R², MSE, and residual analysis.</li>
             </ul>
           </div>
         </header>
@@ -213,11 +250,14 @@ export const App = () => {
               lambdaL2={lambdaL2}
               setLambdaL2={setLambdaL2}
               metrics={processedData?.metrics || {
-                trainMean: 0, trainStd: 0, trainR2: 0,
-                testMean: 0, testStd: 0, testR2: 0,
+                trainR2: 0, testR2: 0,
+                trainAdjR2: 0, testAdjR2: 0,
+                trainMSE: 0, testMSE: 0,
                 resMean: 0, resStd: 0
               }}
               polyEquation={processedData?.polyEquation || ''}
+              pGeqN={processedData?.pGeqN || false}
+              nTrain={processedData?.nTrain || 0}
             />
           </div>
 
@@ -229,10 +269,12 @@ export const App = () => {
                 resData={processedData.resChartData}
                 histData={processedData.histChartData}
                 scatterData={processedData.scatterChartData}
-                standardize={isStandardized}
               />
             )}
-            <MathDerivation />
+            <MathDerivation
+              polyOrder={polyOrder}
+              regularization={regularization}
+            />
           </div>
         </main>
       </div>
