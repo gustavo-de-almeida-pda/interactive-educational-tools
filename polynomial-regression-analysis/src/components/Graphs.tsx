@@ -66,8 +66,8 @@ export const Graphs: React.FC<GraphsProps> = ({
   let minScatter = Infinity;
   let maxScatter = -Infinity;
   scatterData.forEach(d => {
-    minScatter = Math.min(minScatter, d.target, d.targetTrue, d.pred);
-    maxScatter = Math.max(maxScatter, d.target, d.targetTrue, d.pred);
+    minScatter = Math.min(minScatter, d.target, d.pred);
+    maxScatter = Math.max(maxScatter, d.target, d.pred);
   });
   if (minScatter === Infinity) minScatter = 0;
   if (maxScatter === -Infinity) maxScatter = 0;
@@ -176,11 +176,9 @@ export const Graphs: React.FC<GraphsProps> = ({
                 <XAxis dataKey="target" type="number" domain={[scatterMinRounded, scatterMaxRounded]} allowDecimals={false} name="Target" label={{ value: 'Target (y_test)', position: 'bottom', offset: 0 }} />
                 <YAxis type="number" domain={[scatterMinRounded, scatterMaxRounded]} allowDecimals={false} name="Predicted" label={{ value: 'Predicted (y_hat)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '5px' }} />
                 {/* 45 degree line */}
                 <ReferenceLine segment={[{ x: scatterMinRounded, y: scatterMinRounded }, { x: scatterMaxRounded, y: scatterMaxRounded }]} stroke="#000" strokeWidth={2} />
-                <Scatter data={scatterData.map(d => ({ target: d.targetTrue, pred: d.pred }))} dataKey="pred" fill="#f59e0b" name="True target vs. Predicted" isAnimationActive={false} />
-                <Scatter dataKey="pred" fill="#10b981" name="Noisy target vs. Predicted" isAnimationActive={false} />
+                <Scatter dataKey="pred" fill="#10b981" name="Target vs. Predicted" isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
