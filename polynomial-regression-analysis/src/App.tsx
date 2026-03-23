@@ -103,6 +103,14 @@ export const App = () => {
     const resMean = mean(residuals);
     const resStd = stdDev(residuals, resMean);
 
+    // Descriptive statistics of y
+    const trainYMean = mean(yTrainOriginal);
+    const testYMean = mean(yTestOriginal);
+    const trainYStd = stdDev(yTrainOriginal, trainYMean);
+    const testYStd = stdDev(yTestOriginal, testYMean);
+    const trainCV = trainYMean !== 0 ? (trainYStd / Math.abs(trainYMean)) * 100 : 0;
+    const testCV = testYMean !== 0 ? (testYStd / Math.abs(testYMean)) * 100 : 0;
+
     // Build equation string (descending order, original x scale)
     let eq = 'y = ';
     if (isStandardized) {
@@ -199,6 +207,14 @@ export const App = () => {
         resMean,
         resStd
       },
+      descriptiveStats: {
+        trainYMean,
+        testYMean,
+        trainYStd,
+        testYStd,
+        trainCV,
+        testCV
+      },
       polyEquation: eq,
       trainChartData,
       testChartData,
@@ -253,6 +269,11 @@ export const App = () => {
                 trainAdjR2: 0, testAdjR2: 0,
                 trainMSE: 0, testMSE: 0,
                 resMean: 0, resStd: 0
+              }}
+              descriptiveStats={processedData?.descriptiveStats || {
+                trainYMean: 0, testYMean: 0,
+                trainYStd: 0, testYStd: 0,
+                trainCV: 0, testCV: 0
               }}
               polyEquation={processedData?.polyEquation || ''}
               pGeqN={processedData?.pGeqN || false}
