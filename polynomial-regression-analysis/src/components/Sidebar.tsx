@@ -32,6 +32,14 @@ interface SidebarProps {
     resMean: number;
     resStd: number;
   };
+  descriptiveStats: {
+    trainYMean: number;
+    testYMean: number;
+    trainYStd: number;
+    testYStd: number;
+    trainCV: number;
+    testCV: number;
+  };
   polyEquation: string;
   pGeqN: boolean;
   nTrain: number;
@@ -58,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   lambdaL2,
   setLambdaL2,
   metrics,
+  descriptiveStats,
   polyEquation,
   pGeqN,
   nTrain,
@@ -236,6 +245,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Descriptive Statistics Box */}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Descriptive Statistics</h3>
+
+        <div className="overflow-hidden rounded-lg border border-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 text-xs text-center">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-2 py-2 font-medium text-slate-500">Statistic</th>
+                <th className="px-2 py-2 font-medium text-slate-500">Training</th>
+                <th className="px-2 py-2 font-medium text-slate-500">Testing</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              <tr>
+                <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$\\bar{x}$'}</Latex> (Mean)</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYMean.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYMean.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$s$'}</Latex> (Std Dev)</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYStd.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYStd.toFixed(4)}</td>
+              </tr>
+              <tr>
+                <td className="px-2 py-2 font-medium text-slate-900">CV (%)</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainCV.toFixed(2)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testCV.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
