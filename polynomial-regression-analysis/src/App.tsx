@@ -163,7 +163,6 @@ export const App = () => {
     // Scatter data with both noisy target AND true target
     const scatterChartData = yTestOriginal.map((y, i) => ({
       target: y,
-      targetTrue: testDataRaw.y_t[i],
       pred: yTestHat[i]
     }));
 
