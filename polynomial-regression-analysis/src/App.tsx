@@ -37,8 +37,8 @@ export const App = () => {
 
   // Generate raw data
   useEffect(() => {
-    const train = generateData(-5, 5, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, false);
-    const test = generateData(-5, 5, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, true);
+    const train = generateData(-10, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, false);
+    const test = generateData(-10, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, true);
     setTrainDataRaw(train);
     setTestDataRaw(test);
   }, [sampleMode, increment, numPoints, noiseLevel, regenerateTrigger]);
@@ -63,8 +63,8 @@ export const App = () => {
       xForMatrix_test = xTestOriginal.map(v => (v - xStats.mean) / xStats.stdDev);
     } else {
       // Normalize x to [-1, 1] for numerical stability
-      xForMatrix_train = normalizeToUnit(xTrainOriginal, -5, 5);
-      xForMatrix_test = normalizeToUnit(xTestOriginal, -5, 5);
+      xForMatrix_train = normalizeToUnit(xTrainOriginal, -10, 10);
+      xForMatrix_test = normalizeToUnit(xTestOriginal, -10, 10);
     }
 
     // y is NEVER standardized (issue #11 fix)
@@ -131,11 +131,11 @@ export const App = () => {
       eq += '  (x\u0303 = standardized x)';
     } else {
       // Back-transform coefficients to original x scale
-      // x_norm = (x - (-5)) / (5 - (-5)) * 2 - 1 = x/5
-      // So x = 5 * x_norm, and β_orig_j = β_norm_j / 5^j
+      // x_norm = (x - (-10)) / (10 - (-10)) * 2 - 1 = x/10
+      // So x = 10 * x_norm, and β_orig_j = β_norm_j / 10^j
       const terms: string[] = [];
       for (let i = polyOrder; i >= 0; i--) {
-        const coef = beta.get(i, 0) / Math.pow(5, i);
+        const coef = beta.get(i, 0) / Math.pow(10, i);
         if (i === 0) {
           terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(4)}`);
         } else {
