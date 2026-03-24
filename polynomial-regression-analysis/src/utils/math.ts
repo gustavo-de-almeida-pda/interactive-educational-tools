@@ -21,11 +21,13 @@ export function generateData(
     }
   }
 
-  // True function: y = (x/xRange)^trueOrder * xRange^2
-  // This keeps the output range bounded (~[-100, 100]) regardless of trueOrder
+  // True function: trueOrder=0 means constant y=15,
+  // otherwise y = (x/xRange)^trueOrder * xRange^2
   const xRange = Math.max(Math.abs(xMin), Math.abs(xMax));
   const scale = xRange * xRange;
-  const y_t = x.map((val) => Math.pow(val / xRange, trueOrder) * scale);
+  const y_t = trueOrder === 0
+    ? x.map(() => 15)
+    : x.map((val) => Math.pow(val / xRange, trueOrder) * scale);
 
   // Box-Muller transform for normal distribution
   const randomNormal = () => {

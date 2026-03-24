@@ -38,8 +38,8 @@ export const App = () => {
 
   // Generate raw data — reacts to ALL data parameters including trueOrder
   useEffect(() => {
-    const train = generateData(0, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, false, trueOrder);
-    const test = generateData(0, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, true, trueOrder);
+    const train = generateData(-10, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, false, trueOrder);
+    const test = generateData(-10, 10, sampleMode === 'increment' ? increment : null, sampleMode === 'points' ? numPoints : null, noiseLevel, true, trueOrder);
     setTrainDataRaw(train);
     setTestDataRaw(test);
   }, [sampleMode, increment, numPoints, noiseLevel, trueOrder, regenerateTrigger]);
@@ -78,8 +78,8 @@ export const App = () => {
       xForMatrix_train = xStats.standardized;
       xForMatrix_test = xTestOriginal.map(v => (v - xStats.mean) / xStats.stdDev);
     } else {
-      xForMatrix_train = normalizeToUnit(xTrainOriginal, 0, 10);
-      xForMatrix_test = normalizeToUnit(xTestOriginal, 0, 10);
+      xForMatrix_train = normalizeToUnit(xTrainOriginal, -10, 10);
+      xForMatrix_test = normalizeToUnit(xTestOriginal, -10, 10);
     }
 
     const yTrain = [...yTrainOriginal];
@@ -135,22 +135,10 @@ export const App = () => {
       eq += '  (x\u0303 = standardized x)';
     } else {
       // Back-transform coefficients to original x scale
-      // x_norm = (x - c) / s where c = 5, s = 5
-      // Expand β_j * ((x - c) / s)^j using binomial theorem
-      const c = 5, s = 5;
-      const origCoefs = new Array(polyOrder + 1).fill(0);
-      for (let j = 0; j <= polyOrder; j++) {
-        const bj = beta.get(j, 0);
-        // ((x - c)/s)^j = (1/s^j) * Σ_{k=0}^{j} C(j,k) * x^k * (-c)^(j-k)
-        for (let k = 0; k <= j; k++) {
-          let binom = 1;
-          for (let m = 0; m < k; m++) binom = binom * (j - m) / (m + 1);
-          origCoefs[k] += bj * binom * Math.pow(-c, j - k) / Math.pow(s, j);
-        }
-      }
+      // x_norm = x/10, so β_orig_j = β_norm_j / 10^j
       const terms: string[] = [];
       for (let i = polyOrder; i >= 0; i--) {
-        const coef = origCoefs[i];
+        const coef = beta.get(i, 0) / Math.pow(10, i);
         if (i === 0) {
           terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(3)}`);
         } else {

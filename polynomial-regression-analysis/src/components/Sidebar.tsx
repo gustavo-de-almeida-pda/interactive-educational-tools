@@ -160,17 +160,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div>
             <h4 className="font-semibold text-sm text-slate-700 mb-1">True Function Order</h4>
-            <label className="block text-xs text-slate-500 mb-1">(1 to 3, step: 1)</label>
+            <label className="block text-xs text-slate-500 mb-1">(0 = constant y = 15, 1 to 3 = polynomial)</label>
             <input
               type="range"
-              min="1"
+              min="0"
               max="3"
               step="1"
               value={trueOrder}
               onChange={(e) => setTrueOrder(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="text-right text-sm font-medium">{trueOrder}</div>
+            <div className="text-right text-sm font-medium">{trueOrder === 0 ? '0 (constant, y = 15)' : trueOrder}</div>
           </div>
         </div>
       </div>
