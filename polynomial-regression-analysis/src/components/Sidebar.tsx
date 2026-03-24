@@ -160,11 +160,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div>
             <h4 className="font-semibold text-sm text-slate-700 mb-1">True Function Order</h4>
-            <label className="block text-xs text-slate-500 mb-1">(1 to 50, step: 1)</label>
+            <label className="block text-xs text-slate-500 mb-1">(1 to 3, step: 1)</label>
             <input
               type="range"
               min="1"
-              max="50"
+              max="3"
               step="1"
               value={trueOrder}
               onChange={(e) => setTrueOrder(parseInt(e.target.value))}
@@ -283,18 +283,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <tbody className="divide-y divide-slate-200 bg-white">
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$\\bar{y}$'}</Latex> (Mean)</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYMean.toFixed(4)}</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYMean.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYMean.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYMean.toFixed(3)}</td>
               </tr>
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$s$'}</Latex> (Std Dev)</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYStd.toFixed(4)}</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYStd.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYStd.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYStd.toFixed(3)}</td>
               </tr>
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900">CV (%)</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainCV.toFixed(2)}</td>
-                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testCV.toFixed(2)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainCV.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{descriptiveStats.testCV.toFixed(3)}</td>
               </tr>
             </tbody>
           </table>
@@ -318,18 +318,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <tbody className="divide-y divide-slate-200 bg-white">
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900">MSE</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.trainMSE.toFixed(4)}</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.testMSE.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.trainMSE.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.testMSE.toFixed(3)}</td>
               </tr>
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900">R²</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.trainR2.toFixed(4)}</td>
-                <td className="px-2 py-2 text-slate-600">{metrics.testR2.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.trainR2.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{metrics.testR2.toFixed(3)}</td>
               </tr>
               <tr>
                 <td className="px-2 py-2 font-medium text-slate-900">Adj. R²</td>
-                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.trainAdjR2) ? 'N/A' : metrics.trainAdjR2.toFixed(4)}</td>
-                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.testAdjR2) ? 'N/A' : metrics.testAdjR2.toFixed(4)}</td>
+                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.trainAdjR2) ? 'N/A' : metrics.trainAdjR2.toFixed(3)}</td>
+                <td className="px-2 py-2 text-slate-600">{isNaN(metrics.testAdjR2) ? 'N/A' : metrics.testAdjR2.toFixed(3)}</td>
               </tr>
             </tbody>
           </table>
@@ -339,11 +339,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="grid grid-cols-2 gap-2 text-center text-sm">
           <div className="bg-slate-50 p-2 rounded border border-slate-100">
             <div className="text-xs text-slate-500 mb-1">Mean</div>
-            <div className="font-medium">{metrics.resMean.toFixed(4)}</div>
+            <div className="font-medium">{metrics.resMean.toFixed(3)}</div>
           </div>
           <div className="bg-slate-50 p-2 rounded border border-slate-100">
             <div className="text-xs text-slate-500 mb-1">Std Dev</div>
-            <div className="font-medium">{metrics.resStd.toFixed(4)}</div>
+            <div className="font-medium">{metrics.resStd.toFixed(3)}</div>
           </div>
         </div>
       </div>
