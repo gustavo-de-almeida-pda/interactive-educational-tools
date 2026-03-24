@@ -29,7 +29,7 @@ export const Graphs: React.FC<GraphsProps> = ({
   histData,
   scatterData,
 }) => {
-  const xDomain = [-10, 10];
+  const xDomain = [0, 10];
 
   // Find y domain for train/test to keep them same
   let minY = 0, maxY = 0;
