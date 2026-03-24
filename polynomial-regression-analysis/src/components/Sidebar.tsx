@@ -269,7 +269,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Descriptive Statistics Box */}
       <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Descriptive Statistics</h3>
+        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Descriptive Statistics (y)</h3>
 
         <div className="overflow-hidden rounded-lg border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-xs text-center">
@@ -282,7 +282,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
               <tr>
-                <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$\\bar{x}$'}</Latex> (Mean)</td>
+                <td className="px-2 py-2 font-medium text-slate-900"><Latex>{'$\\bar{y}$'}</Latex> (Mean)</td>
                 <td className="px-2 py-2 text-slate-600">{descriptiveStats.trainYMean.toFixed(4)}</td>
                 <td className="px-2 py-2 text-slate-600">{descriptiveStats.testYMean.toFixed(4)}</td>
               </tr>
