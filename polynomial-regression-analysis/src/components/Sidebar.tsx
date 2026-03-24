@@ -276,8 +276,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-2 py-2 font-medium text-slate-500">Statistic</th>
-                <th className="px-2 py-2 font-medium text-slate-500">Training</th>
-                <th className="px-2 py-2 font-medium text-slate-500">Testing</th>
+                <th className="px-2 py-2 font-medium text-slate-500">Noisy obs. (train)</th>
+                <th className="px-2 py-2 font-medium text-slate-500">Noisy obs. (test)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
