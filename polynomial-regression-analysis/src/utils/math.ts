@@ -6,7 +6,8 @@ export function generateData(
   increment: number | null,
   numPoints: number | null,
   noiseLevel: number,
-  isTest: boolean
+  isTest: boolean,
+  trueOrder: number = 2
 ) {
   let x: number[] = [];
   if (increment !== null) {
@@ -20,7 +21,11 @@ export function generateData(
     }
   }
 
-  const y_t = x.map((val) => val * val);
+  // True function: y = (x/xRange)^trueOrder * xRange^2
+  // This keeps the output range bounded (~[-100, 100]) regardless of trueOrder
+  const xRange = Math.max(Math.abs(xMin), Math.abs(xMax));
+  const scale = xRange * xRange;
+  const y_t = x.map((val) => Math.pow(val / xRange, trueOrder) * scale);
 
   // Box-Muller transform for normal distribution
   const randomNormal = () => {
