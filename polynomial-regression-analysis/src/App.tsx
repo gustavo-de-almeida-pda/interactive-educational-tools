@@ -123,10 +123,10 @@ export const App = () => {
       for (let i = polyOrder; i >= 0; i--) {
         const coef = beta.get(i, 0);
         if (i === 0) {
-          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(4)}`);
+          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(3)}`);
         } else {
           const sign = coef >= 0 && terms.length > 0 ? '+ ' : (coef < 0 ? '- ' : '');
-          const absCoef = Math.abs(coef).toFixed(4);
+          const absCoef = Math.abs(coef).toFixed(3);
           const xTerm = i === 1 ? 'x\u0303' : `x\u0303^${i}`;
           terms.push(`${sign}${absCoef}${xTerm}`);
         }
@@ -140,10 +140,10 @@ export const App = () => {
       for (let i = polyOrder; i >= 0; i--) {
         const coef = beta.get(i, 0) / Math.pow(10, i);
         if (i === 0) {
-          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(4)}`);
+          terms.push(`${coef >= 0 && terms.length > 0 ? '+ ' : ''}${coef.toFixed(3)}`);
         } else {
           const sign = coef >= 0 && terms.length > 0 ? '+ ' : (coef < 0 ? '- ' : '');
-          const absCoef = Math.abs(coef).toFixed(4);
+          const absCoef = Math.abs(coef).toFixed(3);
           const xTerm = i === 1 ? 'x' : `x^${i}`;
           terms.push(`${sign}${absCoef}${xTerm}`);
         }
