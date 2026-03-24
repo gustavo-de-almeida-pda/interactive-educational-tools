@@ -12,6 +12,8 @@ interface SidebarProps {
   setNumPoints: (val: number) => void;
   noiseLevel: number;
   setNoiseLevel: (val: number) => void;
+  trueOrder: number;
+  setTrueOrder: (val: number) => void;
   polyOrder: number;
   setPolyOrder: (val: number) => void;
   standardize: boolean;
@@ -55,6 +57,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setNumPoints,
   noiseLevel,
   setNoiseLevel,
+  trueOrder,
+  setTrueOrder,
   polyOrder,
   setPolyOrder,
   standardize,
@@ -152,6 +156,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full"
             />
             <div className="text-right text-sm font-medium">{noiseLevel}</div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-slate-700 mb-1">True Function Order</h4>
+            <label className="block text-xs text-slate-500 mb-1">(1 to 50, step: 1)</label>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value={trueOrder}
+              onChange={(e) => setTrueOrder(parseInt(e.target.value))}
+              className="w-full"
+            />
+            <div className="text-right text-sm font-medium">{trueOrder}</div>
           </div>
         </div>
       </div>
